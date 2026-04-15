@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — Modder21</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="admin-body">
+
+<div class="admin-layout">
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="admin-sidebar-logo">
+      <a href="/admin/">MODDER<span>21</span></a>
+      <small>ADMIN PANEL</small>
+    </div>
+    <nav class="admin-nav">
+      <a class="admin-nav-item active" onclick="showSection('dashboard')">
+        <span class="nav-icon">📊</span> Dashboard
+      </a>
+      <a class="admin-nav-item" onclick="showSection('orders')">
+        <span class="nav-icon">🛒</span> Orders
+      </a>
+      <a class="admin-nav-item" onclick="showSection('products')">
+        <span class="nav-icon">📦</span> Products
+      </a>
+      <a class="admin-nav-item" onclick="showSection('keys')">
+        <span class="nav-icon">🔑</span> Keys
+      </a>
+      <a class="admin-nav-item" onclick="showSection('settings')">
+        <span class="nav-icon">⚙️</span> Settings
+      </a>
+      <a class="admin-nav-item" href="/" target="_blank">
+        <span class="nav-icon">🌐</span> View Store
+      </a>
+    </nav>
+    <div class="admin-sidebar-footer">
+      <button class="btn btn-danger btn-sm" style="width:100%;justify-content:center" onclick="logout()">Logout</button>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="admin-main">
+
+    <!-- ── DASHBOARD ── -->
+    <div id="section-dashboard">
+      <div class="admin-header">
+        <div>
+          <h1>Dashboard</h1>
+          <p>Overview of your store activity</p>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="loadDashboard()">↻ Refresh</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value accent" id="stat-total">—</div></div>
+        <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value warn" id="stat-pending">—</div></div>
+        <div class="stat-card"><div class="stat-label">Delivered</div><div class="stat-value success" id="stat-delivered">—</div></div>
+        <div class="stat-card"><div class="stat-label">Revenue</div><div class="stat-value accent" id="stat-revenue">—</div></div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-card-header">
+          <h3>Recent Orders</h3>
+          <a class="btn btn-outline btn-sm" onclick="showSection('orders')">View All</a>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Order ID</th><th>Customer</th><th>Discord</th><th>Status</th><th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="recent-orders">
+              <tr><td colspan="5" style="text-align:center;padding:24px"><div class="spinner" style="margin:auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ORDERS ── -->
+    <div id="section-orders" style="display:none">
+      <div class="admin-header">
+        <div>
+          <h1>Orders</h1>
+          <p>Manage customer orders and deliver license keys</p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select class="form-select" id="order-filter" onchange="loadOrders(this.value)" style="width:auto;padding:8px 12px">
+            <option value="">All</option>
+            <option value="pending">Pending</option>
+            <option value="processing">Processing</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="loadOrders(document.getElementById('order-filter').value)">↻</button>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>Order ID</th><th>Name</th><th>Email</th><th>Discord</th><th>Status</th><th>Total</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="orders-tbody">
+              <tr><td colspan="7" style="text-align:center;padding:24px"><div class="spinner" style="margin:auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Order modal -->
+      <div class="modal-overlay" id="order-modal" style="display:none">
+        <div class="modal">
+          <h3>Manage Order — <span id="modal-order-id"></span></h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+            <div><div style="font-size:0.7rem;color:var(--text-muted);font-family:'Orbitron',sans-serif;letter-spacing:0.1em;margin-bottom:4px">CUSTOMER</div><div id="modal-customer" style="font-size:0.88rem"></div></div>
+            <div><div style="font-size:0.7rem;color:var(--text-muted);font-family:'Orbitron',sans-serif;letter-spacing:0.1em;margin-bottom:4px">DISCORD</div><div id="modal-discord" style="font-size:0.88rem;color:var(--accent)"></div></div>
+            <div style="grid-column:1/-1"><div style="font-size:0.7rem;color:var(--text-muted);font-family:'Orbitron',sans-serif;letter-spacing:0.1em;margin-bottom:4px">TOTAL / PAYMENT</div><div id="modal-total" style="font-size:1rem;font-family:'Orbitron',sans-serif;color:var(--accent)"></div></div>
+          </div>
+
+          <div style="margin-bottom:20px">
+            <div style="font-size:0.7rem;color:var(--text-muted);font-family:'Orbitron',sans-serif;letter-spacing:0.1em;margin-bottom:8px">ITEMS</div>
+            <div id="modal-items"></div>
+          </div>
+
+          <div class="modal-form">
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select class="form-select" id="modal-status">
+                <option value="pending">Pending</option>
+                <option value="processing">Processing</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">License Key / Access Info</label>
+              <input class="form-input" id="modal-license" type="text" placeholder="Key or access link..." />
+              <small style="font-size:0.72rem;color:var(--text-dim)">Shown to customer when status is "delivered"</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Internal Notes</label>
+              <textarea class="form-textarea" id="modal-notes" placeholder="Internal notes..." style="min-height:70px"></textarea>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-primary btn-sm" id="modal-save">Save Changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PRODUCTS ── -->
+    <div id="section-products" style="display:none">
+      <div class="admin-header">
+        <div>
+          <h1>Products</h1>
+          <p>Manage your product catalog</p>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openProductModal()">+ Add Product</button>
+      </div>
+
+      <div class="table-card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>#</th><th>Name / Category</th><th>Game</th><th>Price</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="products-tbody">
+              <tr><td colspan="6" style="text-align:center;padding:24px"><div class="spinner" style="margin:auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Product modal -->
+      <div class="modal-overlay" id="product-modal" style="display:none">
+        <div class="modal modal-wide">
+          <h3 id="product-modal-title">Add New Product</h3>
+          <form id="product-form" class="modal-form" onsubmit="saveProduct(event)">
+            <input type="hidden" id="product-id" />
+
+            <!-- Basic info -->
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Name *</label>
+                <input class="form-input" id="p-name" type="text" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Game *</label>
+                <input class="form-input" id="p-game" type="text" placeholder="CS2, FiveM, Valorant..." required />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Category</label>
+                <input class="form-input" id="p-category" type="text" placeholder="CS2 Softwares, CS2 Configs..." />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Type</label>
+                <select class="form-select" id="p-type">
+                  <option value="software">Software</option>
+                  <option value="config">Config</option>
+                  <option value="service">Service</option>
+                  <option value="bundle">Bundle</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Badge (optional)</label>
+                <input class="form-input" id="p-badge" type="text" placeholder="New, Popular, Hot..." />
+              </div>
+              <div class="form-group" id="product-status-row" style="display:none">
+                <label class="form-label">Status</label>
+                <select class="form-select" id="p-status">
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Imagem Principal (URL)</label>
+              <input class="form-input" id="p-image-url" type="url" placeholder="https://..." />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Vídeo (URL YouTube ou MP4)</label>
+              <input class="form-input" id="p-video-url" type="url" placeholder="https://youtube.com/watch?v=... ou https://..." />
+              <small style="font-size:0.72rem;color:var(--text-dim)">Cole o link do YouTube ou de um vídeo direto.</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Galeria de Imagens</label>
+              <div id="p-gallery-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
+              <div style="display:flex;gap:8px">
+                <input class="form-input" id="p-gallery-input" type="url" placeholder="https://... (URL da imagem)" style="flex:1" />
+                <button type="button" class="btn btn-outline btn-sm" onclick="addGalleryImage()">+ Adicionar</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tags (separadas por vírgula)</label>
+              <input class="form-input" id="p-tags" type="text" placeholder="aimbot, esp, undetected..." />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Descrição</label>
+              <textarea class="form-textarea" id="p-description" placeholder="Descrição do produto..."></textarea>
+            </div>
+
+            <!-- Plans — dynamic -->
+            <div style="margin-top:4px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                <div style="font-size:0.7rem;color:var(--text-muted);font-family:'Orbitron',sans-serif;letter-spacing:0.12em;text-transform:uppercase">Planos de Preço *</div>
+                <button type="button" class="btn btn-outline btn-sm" style="font-size:0.72rem;padding:4px 10px" onclick="addPlanRow()">+ Plano</button>
+              </div>
+              <div id="dynamic-plans-list" style="display:flex;flex-direction:column;gap:8px"></div>
+            </div>
+
+            <div class="modal-footer" style="margin-top:16px;padding-top:16px">
+              <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('product-modal').style.display='none'">Cancelar</button>
+              <button type="submit" class="btn btn-primary btn-sm">Guardar Produto</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── KEYS ── -->
+    <div id="section-keys" style="display:none">
+      <div class="admin-header">
+        <div><h1>Keys</h1><p>Gerir keys de produto para entrega automática</p></div>
+        <button class="btn btn-primary btn-sm" onclick="openAddKeyModal()">+ Adicionar Key</button>
+      </div>
+
+      <!-- Stats cards per product/plan -->
+      <div id="key-stats-grid" class="stats-grid" style="margin-bottom:24px"></div>
+
+      <!-- Keys table -->
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+        <select class="form-select" id="key-filter-product" onchange="updatePlanFilterDropdown(this, document.getElementById('key-filter-plan'), true); loadKeys();" style="width:auto">
+          <option value="">Todos os produtos</option>
+        </select>
+        <select class="form-select" id="key-filter-plan" onchange="loadKeys()" style="width:auto">
+          <option value="">Todos os planos</option>
+        </select>
+        <select class="form-select" id="key-filter-used" onchange="loadKeys()" style="width:auto">
+          <option value="">Todas</option>
+          <option value="false">Disponíveis</option>
+          <option value="true">Utilizadas</option>
+        </select>
+        <button class="btn btn-outline btn-sm" onclick="loadKeys()">↻</button>
+      </div>
+
+      <div class="table-card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>#</th><th>Produto</th><th>Plano</th><th>Key</th><th>Estado</th><th>Pedido</th><th>Ações</th></tr></thead>
+            <tbody id="keys-tbody">
+              <tr><td colspan="7" style="text-align:center;padding:24px"><div class="spinner" style="margin:auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Add key modal -->
+      <div class="modal-overlay" id="key-modal" style="display:none">
+        <div class="modal" style="max-width:500px">
+          <h3 id="key-modal-title">Adicionar Keys</h3>
+          <div class="modal-form" style="gap:14px">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Produto *</label>
+                <select class="form-select" id="km-product"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Plano *</label>
+                <select class="form-select" id="km-plan">
+                  <option value="">— seleciona produto primeiro —</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Keys (uma por linha para múltiplas)</label>
+              <textarea class="form-textarea" id="km-keys" placeholder="XXXX-XXXX-XXXX&#10;YYYY-YYYY-YYYY&#10;..." style="min-height:100px;font-family:monospace;font-size:0.82rem"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Instruções (opcional — como usar este produto)</label>
+              <textarea class="form-textarea" id="km-instructions" placeholder="1. Download em...&#10;2. Injeta com...&#10;3. Key válida por X dias..." style="min-height:70px"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-outline btn-sm" onclick="closeKeyModal()">Cancelar</button>
+            <button class="btn btn-primary btn-sm" onclick="saveKeys()">Guardar Keys</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS ── -->
+    <div id="section-settings" style="display:none">
+      <div class="admin-header">
+        <div>
+          <h1>Settings</h1>
+          <p>Store configuration</p>
+        </div>
+      </div>
+
+      <div class="table-card" style="padding:32px;max-width:560px">
+        <form onsubmit="saveSettings(event)" style="display:flex;flex-direction:column;gap:20px">
+          <div class="form-group">
+            <label class="form-label">Store Name</label>
+            <input class="form-input" id="s-store-name" type="text" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Discord Webhook URL</label>
+            <input class="form-input" id="s-webhook" type="url" placeholder="https://discord.com/api/webhooks/..." />
+            <small style="font-size:0.72rem;color:var(--text-dim)">Used to notify your Discord server on new orders and deliveries.</small>
+          </div>
+          <div>
+            <button type="submit" class="btn btn-primary btn-sm">Save Settings</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="/js/admin.js"></script>
+<script>
+  const sections = ['dashboard', 'orders', 'products', 'keys', 'settings'];
+
+  function showSection(name) {
+    sections.forEach(s => {
+      document.getElementById(`section-${s}`).style.display = s === name ? 'block' : 'none';
+    });
+    document.querySelectorAll('.admin-nav-item').forEach((el) => {
+      el.classList.toggle('active', el.textContent.trim().toLowerCase().includes(name));
+    });
+
+    if (name === 'dashboard') loadDashboard();
+    if (name === 'orders') loadOrders();
+    if (name === 'products') loadAdminProducts();
+    if (name === 'keys') loadKeysSection();
+    if (name === 'settings') loadSettings();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    showSection('dashboard');
+  });
+</script>
+</body>
+</html>
